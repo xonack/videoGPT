@@ -5,10 +5,17 @@ const ffprobeStatic = require('ffprobe-static');
 const path = require('path');
 
 async function mergePngAndMp3(videoName, index) {
+    try {
+        if (!fs.existsSync(path.join("assets", "mp4", videoName))) {
+          fs.mkdirSync(path.join("assets", "mp4", videoName));
+        }
+    } catch (err) {
+        console.error(err);
+    }
     console.log("mergeFiles: ", videoName, index)
-    const mp3FilePath = path.join("audio", videoName, `${index}.mp3`)
-    const pngFilePath = path.join("imgs", videoName, `${index}.png`);
-    const outputFile = path.join("mp4", videoName, `${index}.mp4`);
+    const mp3FilePath = path.join("assets", "mp3", videoName, `${index}.mp3`)
+    const pngFilePath = path.join("assets", "imgs", videoName, `${index}.png`);
+    const outputFile = path.join("assets", "mp4", videoName, `${index}.mp4`);
     console.log("outputFile: ", outputFile);
     ffmpeg()
         .input(mp3FilePath)
@@ -27,7 +34,7 @@ async function mergeMp4s(videoName, componentCount) {
     console.log("outputFile: ", outputFile);
     const inputFiles = [];
     for (let i = 0; i < componentCount; i++) {
-        inputFiles.push(path.join("mp4", videoName, `${i}.mp4`));
+        inputFiles.push(path.join("assets", "mp4", videoName, `${i}.mp4`));
     }
 
     // console.log(outputFile)
@@ -51,10 +58,17 @@ async function mergeMp4s(videoName, componentCount) {
 
 function concatMp4s(videoName, componentCount) {
     console.log("concatMp4s()")
+    try {
+        if (!fs.existsSync(path.join("final", videoName))) {
+          fs.mkdirSync(path.join("final", videoName));
+        }
+    } catch (err) {
+        console.error(err);
+    }
     const outputFile = path.join("final", videoName, `${videoName}-concat.mp4`);
     const inputFiles = [];
     for (let i = 0; i < componentCount; i++) {
-        inputFiles.push(path.join("mp4", videoName, `${i}.mp4`));
+        inputFiles.push(path.join("assets", "mp4", videoName, `${i}.mp4`));
     }
 
     var listFileName = 'list.txt', fileNames = '';
@@ -66,12 +80,17 @@ function concatMp4s(videoName, componentCount) {
 
     fs.writeFileSync(listFileName, fileNames);
 
-    const command = ffmpeg();
+    try {
+        const command = ffmpeg();
 
-    command.input(listFileName)
-    .inputOptions(['-f concat', '-safe 0'])
-    .outputOptions('-c copy') 
-    .save(outputFile);
+        command.input(listFileName)
+        .inputOptions(['-f concat', '-safe 0'])
+        .outputOptions('-c copy') 
+        .save(outputFile);
+    } catch (error) {
+        console.log("Error: ", error)
+    }
+    
 
 }
 
@@ -79,7 +98,7 @@ function mergeMp3s(videoName, componentCount) {
     const outputFile = path.join("final", videoName, `${videoName}.mp3`);
     const inputFiles = [];
     for (let i = 0; i < componentCount; i++) {
-        inputFiles.push(path.join("audio", videoName, `${i}.mp3`));
+        inputFiles.push(path.join("assets", "mp3", videoName, `${i}.mp3`));
     }
 
     const command = ffmpeg();
@@ -91,8 +110,8 @@ function mergeMp3s(videoName, componentCount) {
 
     // Concatenate the input files together
     command
-    .mergeToFile(outputFile,'./temp', { audioCodec: 'copy' })
-    // .audioCodec('copy')
+    .mergeToFile(outputFile,'./temp', { mp3Codec: 'copy' })
+    // .mp3Codec('copy')
     .on('error', function(err) {
         console.log('Error ' + err.message);
     })
@@ -101,23 +120,18 @@ function mergeMp3s(videoName, componentCount) {
     });
 }
 
-//no audio
-function mergeVideoAndAudio(videoInput, audioInput, outputFile) {
+//no mp3
+function mergeVideoAndmp3(videoInput, mp3Input, outputFile) {
     ffmpeg({ source: videoInput})
-        .addInput(audioInput)
+        .addInput(mp3Input)
         .saveToFile(outputFile)
         // .outputOptions('-c:a copy')
         // .run();
 }
 
-
-const videoName = "planets";
-const count = 23;
-mp3s = [];
-pngs = [];
-
 // concatMp4s(videoName, count);
 
 module.exports = {
+    mergePngAndMp3,
     concatMp4s
 };

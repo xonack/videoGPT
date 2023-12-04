@@ -11,8 +11,8 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const SYSTEM = `split the following input of a video script into sections by punctuation. 
-The outputs should be a csv with a number index, the section of the input script. 
+const SYSTEM = `split the following input of a video script into sections by punctuation marks (".", "!" and "?"). 
+The outputs should be a CSV with a number index, the section of the input script. 
 The csv delimiter is a semicolon (";")
 
 example input 1: 
@@ -21,7 +21,8 @@ Hey there fellow travelers, today we're going to talk about one of the most deba
 example output 1: 
 Index,Script
 0;Hey there fellow travelers, today we're going to talk about one of the most debated topics in the world of travel - the single most beautiful city in the world. 
-1;Now, I know this is a hotly contested topic, and everyone has their own preferences, but hear me out on this one.
+1;Now, I know this is a hotly contested topic! 
+2;Everyone has their own preferences, but hear me out on this one.
 
 
 example input 2: 
@@ -39,29 +40,27 @@ Index,Script
 
 async function splitScript(videoName) {
   console.log("splitScript()")
-  readPath = path.join("script", videoName, `${videoName}.txt`)
+  readPath = path.join("assets", "script", videoName, `${videoName}.txt`)
   let inputScript = fs.readFileSync(readPath, 'utf8');
   console.log("script read from: " + readPath)
-  const escapedScript = inputScript.replace(/,/g, "\\,");
-  console.log("escapedScript: ", escapedScript)
   const response = await openai.createChatCompletion({
     model: 'gpt-3.5-turbo',
     messages: [
       { role: 'system', content: SYSTEM },
-      { role: 'user', content: escapedScript }
+      { role: 'user', content: inputScript }
     ],
   });
   // console.log(response.data.choices[0].message.content + '\n');
   data = response.data.choices[0].message.content;
   // write to fs
   try {
-    if (!fs.existsSync(path.join("csvs", videoName))) {
-      fs.mkdirSync(path.join("csvs", videoName));
+    if (!fs.existsSync(path.join("assets", "csvs", videoName))) {
+      fs.mkdirSync(path.join("assets", "csvs", videoName));
     }
   } catch (err) {
     console.error(err);
   }
-  fs.writeFileSync(path.join("csvs", videoName, `${videoName}.csv`), data);
+  fs.writeFileSync(path.join("assets", "csvs", videoName, `${videoName}.csv`), data);
   console.log('The split script csv has been saved!');
 
   return data

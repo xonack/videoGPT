@@ -11,33 +11,38 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-async function getImages(videoName, descriptions, style) {
+async function getImages(videoName, topic, style) {
   console.log("getImages()")
+
+  // read in descriiptions from json
+  const descriptions = JSON.parse(fs.readFileSync(path.join("assets", "descriptions", videoName, `${videoName}.json`), 'utf8'));
+
     urls = []
     try {
-      if (!fs.existsSync(path.join("imgs", videoName))) {
-        fs.mkdirSync(path.join("imgs", videoName));
+      if (!fs.existsSync(path.join("assets", "imgs", videoName))) {
+        fs.mkdirSync(path.join("assets", "imgs", videoName));
       }
     } catch (err) {
       console.error(err);
     }
-    for(const [i, description] of descriptions.entries()) {
-        imageUrl = await getImageUrl(description.description, style)
+    for(const description of descriptions) {
+        imageUrl = await getImageUrl(description.description, topic, style)
         //save image to imgs/{number}.png
-        const fileName = `${i}.png`;
-        const file = fs.createWriteStream(path.join("imgs", videoName, `${fileName}`));
+        const fileName = `${description.index}.png`;
+        const file = fs.createWriteStream(path.join("assets", "imgs", videoName, `${fileName}`));
         urls.push(imageUrl)
         https.get(imageUrl, function(response) {
             response.pipe(file);
         });
+        console.log("got image for: " + description.index)
     }
     return urls
 }
 
-async function getImageUrl(prompt, style) {
+async function getImageUrl(prompt, topic, style) {
   try {
     const response = await openai.createImage({
-      prompt: prompt + ", " + style,
+      prompt: style + ", " + prompt + ", " + topic,
       n: 1,
       size: "512x512",
     });

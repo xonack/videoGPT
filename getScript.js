@@ -24,14 +24,14 @@ async function getScript(videoName, system, idea, script_specs) {
   script = response.data.choices[0].message.content
   // Write the file to disk
   try {
-    if (!fs.existsSync(path.join("script", videoName))) {
-      fs.mkdirSync(path.join("script", videoName));
+    if (!fs.existsSync(path.join("assets", "script", videoName))) {
+      fs.mkdirSync(path.join("assets", "script", videoName));
     }
   } catch (err) {
     console.error(err);
   }
 
-  filePath = path.join("script", videoName, `${videoName}.txt`)
+  filePath = path.join("assets", "script", videoName, `${videoName}.txt`)
   fs.writeFileSync(filePath, script);
   console.log('Script txt file saved at ' + filePath);
 

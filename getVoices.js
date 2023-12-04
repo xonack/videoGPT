@@ -5,19 +5,19 @@ const parse = require('csv-parse/lib/sync');
 const dotenv = require('dotenv');
 
 dotenv.config();
-const voice_id = '21m00Tcm4TlvDq8ikWAM';
+const voice_id = 'TxGEqnHWrfWFTfGW9XjX';
 const url = `https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`;
 
 async function getVoices(videoName) {
     console.log("getVoices()")
     // read in splitScript csv
-    csvPath = path.join("csvs", videoName, `${videoName}.csv`)
+    csvPath = path.join("assets", "csvs", videoName, `${videoName}.csv`)
     const csvString = fs.readFileSync(csvPath, 'utf-8');
     const records = parse.parse(csvString, { columns: true, delimiter: ';', relax_quotes: true });
     voices = []
     try {
-        if (!fs.existsSync(path.join("audio", videoName))) {
-          fs.mkdirSync(path.join("audio", videoName));
+        if (!fs.existsSync(path.join("assets", "mp3", videoName))) {
+          fs.mkdirSync(path.join("assets", "mp3", videoName));
         }
       } catch (err) {
         console.error(err);
@@ -37,7 +37,7 @@ async function getVoice(message, index, fileName) {
         {
             method: "POST",
             headers: {
-                "accept": 'audio/mpeg',
+                "accept": 'mp3/mpeg',
                 "Content-Type": 'application/json',
                 "xi-api-key": process.env.ELEVENLABS_API_KEY,
             },
@@ -58,7 +58,7 @@ async function getVoice(message, index, fileName) {
     
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        fs.writeFile(path.join("audio", fileName, `${index}.mp3`), buffer, (err) => {
+        fs.writeFile(path.join("assets", "mp3", fileName, `${index}.mp3`), buffer, (err) => {
             if (err) throw err;
             console.log('Voice mp3 file saved!');
         });
